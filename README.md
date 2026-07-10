@@ -1,4 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a Next.js memory game prototype designed for senior-friendly playtesting.
+
+## Playtest Quick Start
+
+Use [TESTER-QUICKSTART.md](TESTER-QUICKSTART.md) when sharing builds with friends, caregivers, or community testers.
 
 ## Getting Started
 
