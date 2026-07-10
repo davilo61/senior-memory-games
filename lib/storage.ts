@@ -1,17 +1,28 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { Resident, GameSession, Difficulty, GameId } from "./types";
+import type {
+  Resident,
+  GameSession,
+  Difficulty,
+  GameId,
+  PlaytestFeedback,
+  FeedbackPerspective,
+} from "./types";
 
 const RESIDENTS_KEY = "smg_residents";
 const SESSIONS_KEY = "smg_sessions";
+const FEEDBACK_KEY = "smg_feedback";
 const EMPTY_RESIDENTS: Resident[] = [];
 const EMPTY_SESSIONS: GameSession[] = [];
+const EMPTY_FEEDBACK: PlaytestFeedback[] = [];
 
 let residentsRawCache: string | null | undefined;
 let residentsSnapshotCache: Resident[] = EMPTY_RESIDENTS;
 let sessionsRawCache: string | null | undefined;
 let sessionsSnapshotCache: GameSession[] = EMPTY_SESSIONS;
+let feedbackRawCache: string | null | undefined;
+let feedbackSnapshotCache: PlaytestFeedback[] = EMPTY_FEEDBACK;
 
 function save<T>(key: string, value: T): void {
   localStorage.setItem(key, JSON.stringify(value));
@@ -44,8 +55,39 @@ function normalizeSession(raw: Partial<GameSession>): GameSession | null {
   };
 }
 
+function normalizeFeedback(raw: Partial<PlaytestFeedback>): PlaytestFeedback | null {
+  if (!raw.id || !raw.date || !raw.notes) {
+    return null;
+  }
+
+  const perspective: FeedbackPerspective =
+    raw.perspective === "friend" ||
+    raw.perspective === "resident" ||
+    raw.perspective === "caregiver" ||
+    raw.perspective === "clinician" ||
+    raw.perspective === "developer"
+      ? raw.perspective
+      : "friend";
+
+  const ratingValue = Number(raw.rating);
+  const rating: 1 | 2 | 3 | 4 | 5 =
+    ratingValue >= 1 && ratingValue <= 5
+      ? (Math.round(ratingValue) as 1 | 2 | 3 | 4 | 5)
+      : 3;
+
+  return {
+    id: raw.id,
+    date: raw.date,
+    name: raw.name?.trim() || "Anonymous",
+    perspective,
+    rating,
+    notes: raw.notes,
+  };
+}
+
 const residentListeners = new Set<() => void>();
 const sessionListeners = new Set<() => void>();
+const feedbackListeners = new Set<() => void>();
 
 function subscribeResidents(listener: () => void): () => void {
   residentListeners.add(listener);
@@ -81,12 +123,33 @@ function subscribeSessions(listener: () => void): () => void {
   };
 }
 
+function subscribeFeedback(listener: () => void): () => void {
+  feedbackListeners.add(listener);
+
+  function onStorage(event: StorageEvent): void {
+    if (event.key === FEEDBACK_KEY) {
+      listener();
+    }
+  }
+
+  window.addEventListener("storage", onStorage);
+
+  return () => {
+    feedbackListeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 function emitResidentsChange(): void {
   residentListeners.forEach((listener) => listener());
 }
 
 function emitSessionsChange(): void {
   sessionListeners.forEach((listener) => listener());
+}
+
+function emitFeedbackChange(): void {
+  feedbackListeners.forEach((listener) => listener());
 }
 
 function getResidentsSnapshot(): Resident[] {
@@ -144,12 +207,45 @@ function getSessionsSnapshot(): GameSession[] {
   return sessionsSnapshotCache;
 }
 
+function getFeedbackSnapshot(): PlaytestFeedback[] {
+  const raw = localStorage.getItem(FEEDBACK_KEY);
+
+  if (raw === feedbackRawCache) {
+    return feedbackSnapshotCache;
+  }
+
+  feedbackRawCache = raw;
+
+  if (!raw) {
+    feedbackSnapshotCache = EMPTY_FEEDBACK;
+    return feedbackSnapshotCache;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const normalized = Array.isArray(parsed)
+      ? parsed
+          .map((item) => normalizeFeedback(item as Partial<PlaytestFeedback>))
+          .filter((item): item is PlaytestFeedback => item !== null)
+      : EMPTY_FEEDBACK;
+    feedbackSnapshotCache = normalized;
+  } catch {
+    feedbackSnapshotCache = EMPTY_FEEDBACK;
+  }
+
+  return feedbackSnapshotCache;
+}
+
 function getResidentsServerSnapshot(): Resident[] {
   return EMPTY_RESIDENTS;
 }
 
 function getSessionsServerSnapshot(): GameSession[] {
   return EMPTY_SESSIONS;
+}
+
+function getFeedbackServerSnapshot(): PlaytestFeedback[] {
+  return EMPTY_FEEDBACK;
 }
 
 export function useResidents() {
@@ -237,4 +333,34 @@ export function useSessions(residentId?: string) {
   }
 
   return { sessions, addSession, getSessionsByGame };
+}
+
+export function useFeedback() {
+  const feedbackEntries = useSyncExternalStore(
+    subscribeFeedback,
+    getFeedbackSnapshot,
+    getFeedbackServerSnapshot
+  );
+
+  function addFeedback(
+    name: string,
+    perspective: FeedbackPerspective,
+    rating: 1 | 2 | 3 | 4 | 5,
+    notes: string
+  ): void {
+    const entry: PlaytestFeedback = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      name: name.trim() || "Anonymous",
+      perspective,
+      rating,
+      notes: notes.trim(),
+    };
+
+    const next = [...getFeedbackSnapshot(), entry];
+    save(FEEDBACK_KEY, next);
+    emitFeedbackChange();
+  }
+
+  return { feedbackEntries, addFeedback };
 }

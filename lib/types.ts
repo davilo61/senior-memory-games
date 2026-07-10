@@ -16,3 +16,19 @@ export interface GameSession {
   total: number;
   difficulty: Difficulty;
 }
+
+export type FeedbackPerspective =
+  | "friend"
+  | "resident"
+  | "caregiver"
+  | "clinician"
+  | "developer";
+
+export interface PlaytestFeedback {
+  id: string;
+  date: string; // ISO date string
+  name: string;
+  perspective: FeedbackPerspective;
+  rating: 1 | 2 | 3 | 4 | 5;
+  notes: string;
+}
