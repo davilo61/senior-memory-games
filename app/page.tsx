@@ -20,9 +20,9 @@ export default function Home() {
   const [feedbackSaved, setFeedbackSaved] = useState(false);
   const router = useRouter();
   const rowActionBaseClass =
-    "h-10 sm:h-11 w-28 sm:w-32 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
+    "h-10 sm:h-11 w-32 sm:w-36 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
   const rowActionWideClass =
-    "h-10 sm:h-11 w-36 sm:w-40 px-4 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
+    "h-10 sm:h-11 w-44 sm:w-48 px-4 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
 
   function handleAdd() {
     const trimmed = newName.trim();
@@ -72,6 +72,12 @@ export default function Home() {
           Select a resident to begin
         </p>
 
+        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-900 shadow-sm">
+          <p className="text-sm sm:text-base font-semibold text-center">
+            Choose a resident, then tap a Play button to start.
+          </p>
+        </div>
+
         {residents.length === 0 ? (
           <p className="text-center text-base text-slate-400 mb-8">
             No residents added yet. Add one below.
@@ -101,12 +107,17 @@ export default function Home() {
                     autoFocus
                   />
                 ) : (
-                  <span
-                    className="text-xl sm:text-2xl font-semibold w-full lg:w-auto whitespace-normal break-words"
-                    title={r.name}
-                  >
-                    {r.name}
-                  </span>
+                  <div className="w-full lg:w-auto">
+                    <span
+                      className="text-xl sm:text-2xl font-semibold w-full lg:w-auto whitespace-normal break-words block"
+                      title={r.name}
+                    >
+                      {r.name}
+                    </span>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Tap any Play button below to launch a game.
+                    </p>
+                  </div>
                 )}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end">
                   <button
@@ -114,28 +125,28 @@ export default function Home() {
                     className={`${rowActionBaseClass} bg-blue-600 text-white hover:bg-blue-700`}
                     disabled={editingResidentId === r.id}
                   >
-                    Recall
+                    Play Recall
                   </button>
                   <button
                     onClick={() => router.push(`/games/pair-match/${r.id}`)}
                     className={`${rowActionBaseClass} bg-indigo-600 text-white hover:bg-indigo-700`}
                     disabled={editingResidentId === r.id}
                   >
-                    Pair Match
+                    Play Pair Match
                   </button>
                   <button
                     onClick={() => router.push(`/games/sequence-recall/${r.id}`)}
                     className={`${rowActionWideClass} bg-violet-600 text-white hover:bg-violet-700`}
                     disabled={editingResidentId === r.id}
                   >
-                    Sequence Recall
+                    Play Sequence Recall
                   </button>
                   <button
                     onClick={() => router.push(`/history/${r.id}`)}
                     className={`${rowActionBaseClass} bg-slate-200 text-slate-700 hover:bg-slate-300`}
                     disabled={editingResidentId === r.id}
                   >
-                    History
+                    View History
                   </button>
                   {editingResidentId === r.id ? (
                     <>
