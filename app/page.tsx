@@ -69,7 +69,9 @@ export default function Home() {
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-2">Memory Lane</h1>
         <p className="text-center text-base text-slate-500 mb-8">
-          Select a resident to begin
+          {residents.length === 0
+            ? "Add a resident to begin"
+            : "Select a resident to begin"}
         </p>
 
         <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-900 shadow-sm">
@@ -181,7 +183,7 @@ export default function Home() {
                         }}
                         className={`${rowActionBaseClass} bg-red-500 text-white hover:bg-red-600`}
                       >
-                        Confirm
+                        Confirm Delete
                       </button>
                       <button
                         onClick={() => setConfirmRemove(null)}
