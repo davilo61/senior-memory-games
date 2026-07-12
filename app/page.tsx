@@ -21,8 +21,8 @@ export default function Home() {
   const router = useRouter();
   const rowActionBaseClass =
     "h-10 sm:h-11 w-32 sm:w-36 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
-  const rowActionWideClass =
-    "h-10 sm:h-11 w-44 sm:w-48 px-4 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
+  const gameActionClass =
+    "h-10 sm:h-11 w-full px-1 sm:px-2 inline-flex items-center justify-center rounded-xl text-[11px] sm:text-sm font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed text-center whitespace-nowrap leading-none";
 
   function handleAdd() {
     const trimmed = newName.trim();
@@ -121,87 +121,92 @@ export default function Home() {
                     </p>
                   </div>
                 )}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end">
-                  <button
-                    onClick={() => handlePlay(r.id)}
-                    className={`${rowActionBaseClass} bg-blue-600 text-white hover:bg-blue-700`}
-                    disabled={editingResidentId === r.id}
-                  >
-                    Play Recall
-                  </button>
-                  <button
-                    onClick={() => router.push(`/games/pair-match/${r.id}`)}
-                    className={`${rowActionBaseClass} bg-indigo-600 text-white hover:bg-indigo-700`}
-                    disabled={editingResidentId === r.id}
-                  >
-                    Play Pair Match
-                  </button>
-                  <button
-                    onClick={() => router.push(`/games/sequence-recall/${r.id}`)}
-                    className={`${rowActionWideClass} bg-violet-600 text-white hover:bg-violet-700`}
-                    disabled={editingResidentId === r.id}
-                  >
-                    Play Sequence Recall
-                  </button>
-                  <button
-                    onClick={() => router.push(`/history/${r.id}`)}
-                    className={`${rowActionBaseClass} bg-slate-200 text-slate-700 hover:bg-slate-300`}
-                    disabled={editingResidentId === r.id}
-                  >
-                    View History
-                  </button>
-                  {editingResidentId === r.id ? (
-                    <>
-                      <button
-                        onClick={() => saveEdit(r.id)}
-                        disabled={!editingName.trim()}
-                        className={`${rowActionBaseClass} bg-green-600 text-white hover:bg-green-700`}
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className={`${rowActionBaseClass} bg-slate-300 text-slate-700 hover:bg-slate-400`}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
+                <div className="w-full lg:w-auto space-y-2">
+                  <div className="grid grid-cols-[1fr_1fr_1.2fr] sm:grid-cols-3 gap-2 sm:gap-3 w-full">
                     <button
-                      onClick={() => startEdit(r.id, r.name)}
-                      className={`${rowActionBaseClass} bg-amber-100 text-amber-700 hover:bg-amber-200`}
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {confirmRemove === r.id ? (
-                    <>
-                      <button
-                        onClick={() => {
-                          removeResident(r.id);
-                          setConfirmRemove(null);
-                        }}
-                        className={`${rowActionBaseClass} bg-red-500 text-white hover:bg-red-600`}
-                      >
-                        Confirm Delete
-                      </button>
-                      <button
-                        onClick={() => setConfirmRemove(null)}
-                        className={`${rowActionBaseClass} bg-slate-300 text-slate-700 hover:bg-slate-400`}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmRemove(r.id)}
-                      className={`${rowActionBaseClass} bg-slate-200 text-slate-600 hover:bg-slate-300`}
+                      onClick={() => handlePlay(r.id)}
+                      className={`${gameActionClass} bg-blue-600 text-white hover:bg-blue-700`}
                       disabled={editingResidentId === r.id}
-                      aria-label={`Remove ${r.name}`}
                     >
-                      ✕
+                      Recall
                     </button>
-                  )}
+                    <button
+                      onClick={() => router.push(`/games/pair-match/${r.id}`)}
+                      className={`${gameActionClass} bg-indigo-600 text-white hover:bg-indigo-700`}
+                      disabled={editingResidentId === r.id}
+                    >
+                      Pair Match
+                    </button>
+                    <button
+                      onClick={() => router.push(`/games/sequence-recall/${r.id}`)}
+                      className={`${gameActionClass} bg-violet-600 text-white hover:bg-violet-700`}
+                      disabled={editingResidentId === r.id}
+                    >
+                      Sequence Recall
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full justify-start lg:justify-end">
+                    <button
+                      onClick={() => router.push(`/history/${r.id}`)}
+                      className={`${rowActionBaseClass} bg-slate-200 text-slate-700 hover:bg-slate-300`}
+                      disabled={editingResidentId === r.id}
+                    >
+                      View History
+                    </button>
+                    {editingResidentId === r.id ? (
+                      <>
+                        <button
+                          onClick={() => saveEdit(r.id)}
+                          disabled={!editingName.trim()}
+                          className={`${rowActionBaseClass} bg-green-600 text-white hover:bg-green-700`}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className={`${rowActionBaseClass} bg-slate-300 text-slate-700 hover:bg-slate-400`}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => startEdit(r.id, r.name)}
+                        className={`${rowActionBaseClass} bg-amber-100 text-amber-700 hover:bg-amber-200`}
+                      >
+                        Edit Resident
+                      </button>
+                    )}
+                    {confirmRemove === r.id ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            removeResident(r.id);
+                            setConfirmRemove(null);
+                          }}
+                          className={`${rowActionBaseClass} bg-red-500 text-white hover:bg-red-600`}
+                        >
+                          Delete Resident?
+                        </button>
+                        <button
+                          onClick={() => setConfirmRemove(null)}
+                          className={`${rowActionBaseClass} bg-slate-300 text-slate-700 hover:bg-slate-400`}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmRemove(r.id)}
+                        className={`${rowActionBaseClass} bg-slate-200 text-slate-600 hover:bg-slate-300`}
+                        disabled={editingResidentId === r.id}
+                        aria-label={`Remove ${r.name}`}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
