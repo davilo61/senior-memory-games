@@ -76,7 +76,7 @@ export default function Home() {
 
         <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-900 shadow-sm">
           <p className="text-sm sm:text-base font-semibold text-center">
-            Choose a resident, then tap a Play button to start.
+            Choose or Add a resident, then tap a Play button to start.
           </p>
         </div>
 
