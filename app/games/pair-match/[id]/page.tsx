@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { formatResidentName } from "../../../../lib/format";
 import { useResidents, useSessions } from "../../../../lib/storage";
 import type { Difficulty } from "../../../../lib/types";
 
@@ -177,7 +178,7 @@ export default function PairMatchPage() {
             ← Back
           </button>
           <h1 className="text-2xl sm:text-4xl font-bold flex-1 text-left sm:text-center pr-0 sm:pr-16 leading-tight">
-            {resident ? `${resident.name} - Pair Match` : "Pair Match"}
+            {resident ? `${formatResidentName(resident.name)} - Pair Match` : "Pair Match"}
           </h1>
         </div>
 

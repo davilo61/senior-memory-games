@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { formatResidentName } from "../../../lib/format";
 import { useResidents, useSessions } from "../../../lib/storage";
 
 export default function HistoryPage() {
@@ -77,7 +78,7 @@ export default function HistoryPage() {
             ← Back
           </button>
             <h1 className="text-3xl font-bold">
-            {resident ? resident.name : "History"}
+            {resident ? formatResidentName(resident.name) : "History"}
           </h1>
           </div>
           <div className="flex items-center gap-2 print:hidden">

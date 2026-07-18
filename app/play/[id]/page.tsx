@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { formatResidentName } from "../../../lib/format";
 import { useResidents, useSessions } from "../../../lib/storage";
 import type { Difficulty } from "../../../lib/types";
 
@@ -151,7 +152,7 @@ export default function PlayPage() {
             ← Back
           </button>
           <h1 className="text-2xl sm:text-4xl font-bold flex-1 text-left sm:text-center pr-0 sm:pr-16 leading-tight">
-            {resident ? resident.name : "Memory Lane"}
+            {resident ? formatResidentName(resident.name) : "Memory Lane"}
           </h1>
         </div>
 

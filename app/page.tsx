@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { formatResidentName } from "../lib/format";
 import { useFeedback, useResidents } from "../lib/storage";
 import type { FeedbackPerspective } from "../lib/types";
 
+const PLAY_PROMPTS = [
+  "Choose a game!",
+  "Let’s play!",
+  "Ready for today’s memory exercise?",
+];
+const PLAY_PROMPT = PLAY_PROMPTS[Math.floor(Math.random() * PLAY_PROMPTS.length)];
+
 export default function Home() {
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { residents, addResident, removeResident, updateResident } = useResidents();
   const { feedbackEntries, addFeedback } = useFeedback();
   const [newName, setNewName] = useState("");
@@ -22,12 +35,12 @@ export default function Home() {
   const rowActionBaseClass =
     "h-10 sm:h-11 w-32 sm:w-36 inline-flex items-center justify-center rounded-xl text-sm sm:text-base font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed";
   const gameActionClass =
-    "h-10 sm:h-11 w-full px-1 sm:px-2 inline-flex items-center justify-center rounded-xl text-[11px] sm:text-sm font-semibold active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed text-center whitespace-nowrap leading-none";
+    "min-h-16 w-full px-4 inline-flex items-center justify-center rounded-2xl text-lg sm:text-xl font-semibold active:scale-95 transition text-center leading-tight shadow-sm";
 
   function handleAdd() {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    addResident(trimmed);
+    const normalizedName = formatResidentName(newName);
+    if (!normalizedName) return;
+    addResident(normalizedName);
     setNewName("");
   }
 
@@ -47,7 +60,7 @@ export default function Home() {
   }
 
   function saveEdit(id: string) {
-    if (updateResident(id, editingName)) {
+    if (updateResident(id, formatResidentName(editingName))) {
       cancelEdit();
     }
   }
@@ -64,89 +77,116 @@ export default function Home() {
     setFeedbackNotes("");
   }
 
-  return (
-    <main className="min-h-screen bg-slate-100 p-3 sm:p-6">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">Memory Lane</h1>
-        <p className="text-center text-base text-slate-500 mb-8">
-          {residents.length === 0
-            ? "Add a resident to begin"
-            : "Select a resident to begin"}
+  if (!isHydrated) {
+    return (
+      <main className="min-h-screen bg-sky-50 p-4 font-sans sm:p-8">
+        <p className="text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          Memory Lane
         </p>
+        <p className="mt-4 text-center text-lg text-slate-600">Loading…</p>
+      </main>
+    );
+  }
 
-        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-900 shadow-sm">
-          <p className="text-sm sm:text-base font-semibold text-center">
-            Choose or Add a resident, then tap a Play button to start.
-          </p>
-        </div>
+  return (
+    <main className="min-h-screen bg-sky-50 p-4 font-sans sm:p-8">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          Memory Lane
+        </h1>
 
         {residents.length === 0 ? (
-          <p className="text-center text-base text-slate-400 mb-8">
-            No residents added yet. Add one below.
-          </p>
+          <section className="mx-auto mt-8 max-w-xl rounded-3xl border border-sky-200 bg-white px-6 py-10 shadow-sm sm:px-10 sm:py-12">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Welcome!</h2>
+              <p className="mt-3 text-lg text-slate-600 sm:text-xl">
+                Add a resident to begin.
+              </p>
+
+              <div className="mt-8 space-y-4">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="Resident name"
+                  className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-lg text-slate-900 placeholder:text-slate-500 focus:border-blue-600 focus:outline-none"
+                  aria-label="Resident name"
+                />
+                <button
+                  onClick={handleAdd}
+                  disabled={!newName.trim()}
+                  className="w-full rounded-xl bg-blue-700 px-7 py-3 text-lg font-semibold text-white transition hover:bg-blue-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Add Resident
+                </button>
+              </div>
+            </div>
+          </section>
         ) : (
-          <ul className="space-y-4 mb-10">
-            {residents.map((r) => (
-              <li
-                key={r.id}
-                className={`bg-white rounded-2xl shadow-md p-4 sm:p-5 flex flex-col gap-4 ${
-                  editingResidentId === r.id
-                    ? ""
-                    : "lg:flex-row lg:items-center lg:justify-between"
-                }`}
-              >
-                {editingResidentId === r.id ? (
-                  <input
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEdit(r.id);
-                      if (e.key === "Escape") cancelEdit();
-                    }}
-                    className="text-xl sm:text-2xl font-semibold border-2 border-slate-300 rounded-xl px-3 py-2 w-full min-h-12 focus:outline-none focus:border-blue-500"
-                    aria-label={`Edit name for ${r.name}`}
-                    autoFocus
-                  />
-                ) : (
-                  <div className="w-full lg:w-auto">
-                    <span
-                      className="text-xl sm:text-2xl font-semibold w-full lg:w-auto whitespace-normal break-words block"
-                      title={r.name}
-                    >
-                      {r.name}
-                    </span>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Tap any Play button below to launch a game.
-                    </p>
-                  </div>
-                )}
-                <div className="w-full lg:w-auto space-y-2">
-                  <div className="grid grid-cols-[1fr_1fr_1.2fr] sm:grid-cols-3 gap-2 sm:gap-3 w-full">
+          <>
+            <ul className="mb-8 mt-6 space-y-5">
+              {residents.map((r) => (
+                <li key={r.id} className="rounded-3xl border border-sky-200 bg-white p-6 shadow-sm sm:p-8">
+                  <h2 className="text-center text-2xl font-bold text-slate-900 sm:text-3xl">
+                    {residents.length === 1
+                      ? `Welcome back, ${formatResidentName(r.name)}!`
+                      : formatResidentName(r.name)}
+                  </h2>
+                  <p className="mb-6 mt-10 text-center text-xl text-slate-700 sm:text-2xl">
+                    {PLAY_PROMPT}
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-3">
                     <button
                       onClick={() => handlePlay(r.id)}
                       className={`${gameActionClass} bg-blue-600 text-white hover:bg-blue-700`}
-                      disabled={editingResidentId === r.id}
                     >
                       Recall
                     </button>
                     <button
                       onClick={() => router.push(`/games/pair-match/${r.id}`)}
                       className={`${gameActionClass} bg-indigo-600 text-white hover:bg-indigo-700`}
-                      disabled={editingResidentId === r.id}
                     >
                       Pair Match
                     </button>
                     <button
                       onClick={() => router.push(`/games/sequence-recall/${r.id}`)}
                       className={`${gameActionClass} bg-violet-600 text-white hover:bg-violet-700`}
-                      disabled={editingResidentId === r.id}
                     >
                       Sequence Recall
                     </button>
                   </div>
+                </li>
+              ))}
+            </ul>
 
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full justify-start lg:justify-end">
+            <details className="rounded-2xl border border-slate-300 bg-white shadow-sm">
+              <summary className="cursor-pointer rounded-2xl px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50">
+                Tester &amp; Admin
+              </summary>
+              <div className="space-y-6 border-t border-slate-200 p-5 sm:p-6">
+                <section>
+                  <h2 className="mb-4 text-xl font-semibold">Manage Residents</h2>
+                  <ul className="space-y-3">
+                    {residents.map((r) => (
+                      <li key={r.id} className="rounded-xl border border-slate-200 p-4">
+                        {editingResidentId === r.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveEdit(r.id);
+                              if (e.key === "Escape") cancelEdit();
+                            }}
+                            className="mb-3 w-full rounded-xl border-2 border-slate-300 px-3 py-2 text-xl font-semibold focus:border-blue-500 focus:outline-none"
+                            aria-label={`Edit name for ${formatResidentName(r.name)}`}
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="mb-3 text-xl font-semibold">{formatResidentName(r.name)}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => router.push(`/history/${r.id}`)}
                       className={`${rowActionBaseClass} bg-slate-200 text-slate-700 hover:bg-slate-300`}
@@ -201,42 +241,41 @@ export default function Home() {
                         onClick={() => setConfirmRemove(r.id)}
                         className={`${rowActionBaseClass} bg-slate-200 text-slate-600 hover:bg-slate-300`}
                         disabled={editingResidentId === r.id}
-                        aria-label={`Remove ${r.name}`}
+                        aria-label={`Remove ${formatResidentName(r.name)}`}
                       >
                         Delete
                       </button>
                     )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section className="border-t border-slate-200 pt-6">
+                  <h2 className="mb-4 text-xl font-semibold">Add Resident</h2>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="Resident name"
+                      className="flex-1 rounded-xl border-2 border-slate-300 px-4 py-2.5 text-base focus:border-blue-500 focus:outline-none"
+                />
+                <button
+                  onClick={handleAdd}
+                  disabled={!newName.trim()}
+                      className="rounded-xl bg-green-600 px-6 py-2.5 text-base font-semibold text-white transition hover:bg-green-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Add
+                </button>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+                </section>
 
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <p className="text-xl font-semibold mb-4">Add Resident</p>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="Resident name"
-              className="flex-1 border-2 border-slate-300 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:border-blue-500"
-            />
-            <button
-              onClick={handleAdd}
-              disabled={!newName.trim()}
-              className="px-6 py-2.5 bg-green-600 text-white rounded-xl text-base font-semibold hover:bg-green-700 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Add
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-md p-6 mt-6">
+                <section className="border-t border-slate-200 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <p className="text-xl font-semibold">Playtest Feedback</p>
+            <h2 className="text-xl font-semibold">Playtest Feedback</h2>
             <p className="text-sm text-slate-500">
               Capture thoughts from friends, caregivers, clinicians, and devs.
             </p>
@@ -320,7 +359,11 @@ export default function Home() {
               </ul>
             )}
           </div>
-        </div>
+                </section>
+              </div>
+            </details>
+          </>
+        )}
       </div>
     </main>
   );
